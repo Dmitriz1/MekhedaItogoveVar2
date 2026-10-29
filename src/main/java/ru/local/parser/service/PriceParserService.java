@@ -12,6 +12,7 @@ import ru.local.parser.repository.ProductRepository;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -30,10 +31,10 @@ public class PriceParserService {
     private final ExecutorService executor;
 
     public List<ProductDto> parseCatalog(String catalogUrl) {
-        log.info("=== [API] Старт парсинга каталога ===");
+        log.info("[API] Старт парсинга каталога");
         try {
             List<String> urls = parser.extractProductLinks(catalogUrl);
-            log.info("=== [API] Найдено ссылок на товары: {} ===", urls.size());
+            log.info("[API] Найдено ссылок на товары: {}", urls.size());
 
             if (urls.isEmpty()) return List.of();
 
@@ -55,8 +56,8 @@ public class PriceParserService {
                     })
                     .collect(Collectors.toList());
 
-        } catch (IOException e) {
-            log.error("=== [API] Ошибка: {} ===", e.getMessage());
+        } catch (Exception e) {
+            log.error("[API] Ошибка: {}", e.getMessage());
             throw new RuntimeException(e);
         }
     }
@@ -71,12 +72,19 @@ public class PriceParserService {
     }
 
     // Фильтрация с использованием Parallel Stream
-    public List<Product> filterProductsInParallel(Long minPrice) {
+    public List<Product> filterProductsInParallel(Long minPrice, boolean sortDescending) {
         List<Product> allProducts = repository.findAll();
 
-        log.info("Запуск Parallel Stream фильтрации для {} товаров", allProducts.size());
-        return allProducts.parallelStream()
-                .filter(p -> p.getPrice() != null && p.getPrice() >= minPrice)
-                .collect(Collectors.toList());
+        var stream = allProducts.parallelStream()
+                .filter(p -> p.getPrice() != null && p.getPrice() >= minPrice);
+
+        // Добавляем сортировку
+        if (sortDescending) {
+            stream = stream.sorted(Comparator.comparing(Product::getPrice).reversed());
+        } else {
+            stream = stream.sorted(Comparator.comparing(Product::getPrice));
+        }
+
+        return stream.collect(Collectors.toList());
     }
 }

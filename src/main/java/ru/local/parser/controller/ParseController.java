@@ -2,6 +2,7 @@ package ru.local.parser.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import ru.local.parser.repository.ProductRepository;
 import org.springframework.web.bind.annotation.*;
 import ru.local.parser.dto.ParseRequest;
 import ru.local.parser.dto.ProductDto;
@@ -15,8 +16,9 @@ import java.util.List;
 @RequestMapping("/api")
 @RequiredArgsConstructor
 public class ParseController {
-    private final PriceParserService priceParserService;
+    private final ProductRepository repository;
     private final SimpleThreadService simpleThreadService;
+    private final PriceParserService priceParserService;
 
     @PostMapping("/parse-catalog")
     public List<ProductDto> parseCatalog(@RequestBody @Valid ParseRequest req) {
@@ -31,8 +33,15 @@ public class ParseController {
     }
 
     // Демонстрация Критерия 4 (Parallel Stream + H2)
-    @GetMapping("/products/filter")
-    public List<Product> filter(@RequestParam Long minPrice) {
-        return priceParserService.filterProductsInParallel(minPrice);
+    @GetMapping("/answer/filter")
+    public List<Product> filter(
+            @RequestParam Long minPrice,
+            @RequestParam(defaultValue = "false") boolean sortDesc) {
+        return priceParserService.filterProductsInParallel(minPrice, sortDesc);
+    }
+
+    @GetMapping({"/products", "/answer"})
+    public List<Product> all() {
+        return repository.findAll();
     }
 }

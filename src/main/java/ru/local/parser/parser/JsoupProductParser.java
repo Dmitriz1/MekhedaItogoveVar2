@@ -1,27 +1,30 @@
 package ru.local.parser.parser;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import ru.local.parser.config.ParserProperties;
 import ru.local.parser.dto.ProductDto;
-import java.io.IOException;
+
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class JsoupProductParser {
     private final ParserProperties props;
+    private final RestTemplate restTemplate;
 
-    public List<String> extractProductLinks(String catalogUrl) throws IOException {
-        Document doc = Jsoup.connect(catalogUrl)
-                .userAgent(props.getUserAgent())
-                .timeout(props.getTimeoutMs())
-                .get();
+    public List<String> extractProductLinks(String catalogUrl) {
+        // Скачиваем HTML через RestTemplate
+        String html = restTemplate.getForObject(catalogUrl, String.class);
+
+        // Парсим скачанный HTML через Jsoup
+        Document doc = Jsoup.parse(html != null ? html : "", catalogUrl);
 
         return doc.select(props.getSelectors().getProductCardLink()).stream()
                 .map(a -> a.absUrl("href"))
@@ -30,8 +33,9 @@ public class JsoupProductParser {
                 .toList();
     }
 
-    public ProductDto parseProduct(String url) throws IOException {
-        Document doc = Jsoup.connect(url).userAgent(props.getUserAgent()).timeout(props.getTimeoutMs()).get();
+    public ProductDto parseProduct(String url) {
+        String html = restTemplate.getForObject(url, String.class);
+        Document doc = Jsoup.parse(html != null ? html : "", url);
 
         String title = text(doc, props.getSelectors().getTitle());
         Long price = extractPrice(doc);

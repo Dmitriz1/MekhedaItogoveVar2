@@ -24,7 +24,7 @@ public class SchedulerService {
             log.info("Запуск плановой проверки цен");
             try {
                 // Пример: раз в минуту фильтруем товары дороже 30000
-                var filtered = parserService.filterProductsInParallel(3000L);
+                var filtered = parserService.filterProductsInParallel(3000L, true);
                 log.info("Найдено премиум-товаров: {}", filtered.size());
             } catch (Exception e) {
                 log.error("Ошибка", e);

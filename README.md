@@ -1,41 +1,45 @@
-# Многопоточный парсер цен (Тестовое задание)
+## Как запустить проект
+1. Откройте проект в IntelliJ IDEA
+2. Запустите главный класс `ParserApplication`
+3. Приложение запустится на порту 8080. База данных H2 создается автоматически в памяти.
 
-Сервис на Spring Boot для сбора цен с сайта локального магазина техники.
-
-## Запуск
-
-### Вариант 1: Запуск через IDE (IntelliJ IDEA / Giga IDE)
-1. Откройте проект в IDE.
-2. Найдите файл `src/main/java/ru.local.parser/ParserApplication.java`.
-3. Нажмите на зеленую стрелочку (Run) рядом с методом `main`.
-4. Дождитесь в консоли сообщения `Tomcat started on port 8080`.
-
-### Вариант 2: Запуск через терминал
-1. Откройте терминал в корневой папке проекта (где находится файл `pom.xml`).
-2. Выполните команду:
-   ```bash
-   # Для Windows:
-   .\mvnw spring-boot:run
-   
-   # Для Linux / macOS:
-   ./mvnw spring-boot:run
-
-## Реализация критериев
-1. **Spring Boot с Unit тестами (6 б.)**:
-   Проект написан на Spring Boot 3.2.5. В папке `src/test` есть тесты `ParserApplicationTests`, проверяющие контекст и логику сервиса (`@SpringBootTest`).
-2. **Простые потоки Thread, Runnable (10 б.)**:
-   Класс `SimpleThreadService.java`. Вызов эндпоинта `POST /api/parse-simple-thread` создает `new Thread(new Runnable())` для парсинга.
-3. **Executor Service (Sheduler), блокирующие структуры, синхронизация, файл, демон-потоки (10 б.)**:
-    - `SchedulerService.java`: написан собственный планировщик через `ScheduledExecutorService`.
-    - `FileStorageService.java`: использует `LinkedBlockingQueue` (блокирующая очередь), `ReentrantLock` (примитив синхронизации) для записи в файл `products.txt`.
-    - В этом же классе создается **демон-поток** (`setDaemon(true)`), который слушает очередь и асинхронно пишет в файл.
-4. **Executor Service (Sheduler), блокирующие структуры, синхронизация, H2, Parallel Stream (14 б.)**:
-    - H2 Database подключена через Spring Data JPA (`ProductRepository`), данные сохраняются в `PriceParserService`.
-    - Шедулер (`SchedulerService`) раз в минуту проверяет данные.
-    - Класс `PriceParserService` содержит метод `filterProductsInParallel()`, который достает все данные из H2 и фильтрует их по цене с помощью `parallelStream()`.
-
-## Запрос
-
-**Запуск парсинга каталога (с сохранением в H2 и файл):**
-```bash
+## Как проверить логику работы
+**Шаг 1. Запуск парсинга каталога**
+Выполните POST-запрос на полный URL в PowerShell:  
 curl.exe -X POST http://localhost:8080/api/parse-catalog -H "Content-Type: application/json" -d "{\"urls\":[\"https://xn---72-9cd9bqh6aic.xn--p1ai/katalog/noutbuki-i-netbuki/\"]}"
+
+### Получение и проверка результатов
+После того как парсер отработал, все данные сохраняются в базу H2.
+Чтобы получить их, откройте в браузере ссылки для получения результатов:
+👉 **`http://localhost:8080/api/products`** (или `http://localhost:8080/api/answer`)
+
+```json
+[
+  {
+    "id": 6,
+    "url": "https://xn---72-9cd9bqh6aic.xn--p1ai/katalog/noutbuki-i-netbuki/asus-vivobook-pro-16x-oled-k6604jv/",
+    "title": "ASUS Vivobook Pro 16X OLED K6604JV",
+    "price": 90000,
+    "description": null,
+    "publishedDate": null,
+    "parsedAt": "2026-10-29T14:19:42.490295"
+  },
+  {
+    "id": 28,
+    "url": "https://xn---72-9cd9bqh6aic.xn--p1ai/katalog/noutbuki-i-netbuki/acer-nitro-v15-anv15-41-r99v/",
+    "title": "Ноутбук Acer Nitro V15 ANV15-41-R99V",
+    "price": 80000,
+    "description": null,
+    "publishedDate": null,
+    "parsedAt": "2026-10-29T14:19:42.557273"
+  },
+  {
+    "id": 13,
+    "url": "https://xn---72-9cd9bqh6aic.xn--p1ai/katalog/noutbuki-i-netbuki/apple-macbook-air-13-inch-2020-a2179/",
+    "title": "Ноутбук Apple MacBook Air 13-inch 2020 (A2179)",
+    "price": 30000,
+    "description": null,
+    "publishedDate": null,
+    "parsedAt": "2026-10-29T14:19:42.511294"
+  }
+]
