@@ -1,0 +1,23 @@
+parser:
+  threads: 8
+  timeout-ms: 10000
+  polite-delay-ms: 300
+  user-agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"
+  selectors:
+    product-card-link: "a[href*='/katalog/noutbuki-i-netbuki/']"
+    title: "h1.product-detail-title"
+    description: "div.product-detail-description-text-content"
+    price-attr: ".product-detail-panel"
+    price-text: ".product-detail-price-current"
+    date: "time[datetime], meta[property='article:published_time']"
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:prices;DB_CLOSE_DELAY=-1
+  jpa:
+    hibernate.ddl-auto: update
+    open-in-view: false
+
+logging:
+  level:
+    ru.local.parser: INFO
