@@ -10,8 +10,6 @@ import ru.local.parser.entity.Product;
 import ru.local.parser.parser.JsoupProductParser;
 import ru.local.parser.repository.ProductRepository;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -78,7 +76,7 @@ public class PriceParserService {
         var stream = allProducts.parallelStream()
                 .filter(p -> p.getPrice() != null && p.getPrice() >= minPrice);
 
-        // Добавляем сортировку
+        // Сортировка
         if (sortDescending) {
             stream = stream.sorted(Comparator.comparing(Product::getPrice).reversed());
         } else {
